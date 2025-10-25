@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Control Study Guide</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define custom Tailwind colors using the Rose Berry palette */
+        :root {
+            --color-bg: #F9F1E8;      /* Off-White/Light Beige */
+            --color-primary: #574144;   /* Dark Brown/Rose - Text/Accent */
+            --color-card: #B79EA1;     /* Light Grey-Rose - Card Background */
+            --color-active: #BF7E81;   /* Muted Rose - Button/Active */
+        }
+        .bg-custom-bg { background-color: var(--color-bg); }
+        .text-custom-primary { color: var(--color-primary); }
+        .bg-custom-card { background-color: var(--color-card); }
+        .bg-custom-active { background-color: var(--color-active); }
+        .hover\:bg-custom-active:hover { background-color: var(--color-active); }
+        .border-custom-primary { border-color: var(--color-primary); }
+        
+        /* 3D Flip Card Styles */
+        .card-container {
+            perspective: 1000px;
+            width: 100%;
+            height: 300px; /* Fixed height for consistency */
+        }
+        .card {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            position: relative;
+            cursor: pointer;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 0.75rem; /* rounded-xl */
+            padding: 1.5rem; /* p-6 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        .card-face-front {
+            background-color: var(--color-card);
+            color: var(--color-primary);
+        }
+        .card-face-back {
+            background-color: var(--color-bg);
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
+            transform: rotateY(180deg);
+            text-align: left;
+            padding: 1rem;
+            justify-content: flex-start; /* Align content to the top */
+        }
+    </style>
+</head>
+<body class="bg-custom-bg min-h-screen p-4 md:p-8 font-sans">
+
+    <!-- Header -->
+    <header class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-custom-primary">
+            Access Control Study Flashcards
+        </h1>
+        <p class="mt-2 text-custom-primary/80 text-lg">
+            Click on any card to flip it and reveal the details.
+        </p>
+    </header>
+
+    <!-- Flashcard Grid -->
+    <main id="card-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <!-- Cards will be populated here by JavaScript -->
+    </main>
+
+    <!-- Reset Button -->
+    <div class="text-center mt-10">
+        <button id="reset-button" class="px-6 py-3 bg-custom-active text-custom-primary font-semibold rounded-lg shadow-md hover:shadow-lg transition duration-300 transform hover:scale-105">
+            Reset All Cards
+        </button>
+    </div>
+
+    <script>
+        const ACCESS_CONTROL_DATA = [
+            {
+                title: "Mandatory Access Control (MAC)",
+                content: "Mechanism: Strictly system-enforced, based on matching a subject's **clearance level** to an object's **sensitivity label**.\n\nUse Case: High-confidentiality environments (military/intelligence) where policy cannot be overridden."
+            },
+            {
+                title: "Role-Based Access Control (RBAC)",
+                content: "Mechanism: Access determined by a user's **organizational role** (e.g., 'Auditor').\n\nKey Feature: Most common in enterprises. Constrained RBAC enforces **Separation of Duties (SoD)**."
+            },
+            {
+                title: "Discretionary Access Control (DAC)",
+                content: "Mechanism: Access based on user identity, implemented via **Access Control Lists (ACLs)**.\n\nRisk: Primary risk is the **resource owner's** discretion leading to **over-permissioning**."
+            },
+            {
+                title: "Attribute-Based Access Control (ABAC)",
+                content: "Mechanism: Access determined **dynamically** by evaluating **attributes** (user's role, time of day, location, device health).\n\nControl: Highly granular and contextual, used in complex cloud applications."
+            },
+            {
+                title: "Rule-Based Access Control (RuBAC)",
+                content: "Mechanism: Access granted or denied based on a **static, prioritized list of rules**.\n\nUse Case: Classic examples are **firewalls** or router Access Control Lists (ACLs)."
+            },
+            {
+                title: "Privileged Access Management (PAM)",
+                content: "Objective: Specialized tools and practices used to manage, monitor, and secure the **most powerful** administrative accounts/roles within an RBAC structure."
+            }
+        ];
+
+        const cardGrid = document.getElementById('card-grid');
+        const resetButton = document.getElementById('reset-button');
+
+        // Function to render the cards
+        function renderCards() {
+            cardGrid.innerHTML = ''; // Clear existing cards
+            ACCESS_CONTROL_DATA.forEach((data, index) => {
+                const container = document.createElement('div');
+                container.className = 'card-container';
+                
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.id = `card-${index}`;
+
+                // Front Face (Title)
+                const front = document.createElement('div');
+                front.className = 'card-face card-face-front';
+                front.innerHTML = `
+                    <h2 class="text-2xl font-extrabold mb-2">${data.title}</h2>
+                    <p class="text-sm font-light">(Click to Flip)</p>
+                `;
+
+                // Back Face (Content)
+                const back = document.createElement('div');
+                back.className = 'card-face card-face-back overflow-auto';
+                
+                // Convert simple newlines to HTML breaks for readable text content
+                const formattedContent = data.content.replace(/\n\n/g, '<p class="mt-2 mb-2"></p>').replace(/\n/g, '<br>');
+                
+                back.innerHTML = `
+                    <h3 class="text-xl font-bold mb-2 underline">${data.title}</h3>
+                    <p class="text-sm">${formattedContent}</p>
+                `;
+                
+                card.appendChild(front);
+                card.appendChild(back);
+                container.appendChild(card);
+                cardGrid.appendChild(container);
+
+                // Add flip functionality
+                card.addEventListener('click', () => {
+                    card.classList.toggle('is-flipped');
+                });
+            });
+        }
+
+        // Function to reset all cards
+        function resetCards() {
+            document.querySelectorAll('.card').forEach(card => {
+                card.classList.remove('is-flipped');
+            });
+        }
+
+        // Initial render
+        window.onload = function() {
+            renderCards();
+            resetButton.addEventListener('click', resetCards);
+        };
+    </script>
+</body>
+</html>
+
